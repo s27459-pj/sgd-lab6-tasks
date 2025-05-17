@@ -43,14 +43,17 @@ REDRECT    = pygame.Rect(XMARGIN, YMARGIN + BUTTONSIZE + BUTTONGAPSIZE, BUTTONSI
 GREENRECT  = pygame.Rect(XMARGIN + BUTTONSIZE + BUTTONGAPSIZE, YMARGIN + BUTTONSIZE + BUTTONGAPSIZE, BUTTONSIZE, BUTTONSIZE)
 
 def main():
-    global FPSCLOCK, DISPLAYSURF, BASICFONT, BEEP1, BEEP2, BEEP3, BEEP4
+    global FPSCLOCK, DISPLAYSURF, BASICBIGFONT, BIGFONT, BEEP1, BEEP2, BEEP3, BEEP4
 
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
     pygame.display.set_caption('Simulate')
 
+    # Load fonts
     BASICFONT = pygame.font.Font('freesansbold.ttf', 16)
+    BASICBIGFONT = pygame.font.Font('freesansbold.ttf', 72)
+
     infoSurf = BASICFONT.render('Match the pattern by clicking on the button or using the Q, W, A, S keys.', 1, DARKGRAY)
     infoRect = infoSurf.get_rect()
     infoRect.topleft = (10, WINDOWHEIGHT - 25)
@@ -223,20 +226,26 @@ def gameOverAnimation(color=WHITE, animationSpeed=50):
     BEEP3.play()
     BEEP4.play()
     r, g, b = color
-    for i in range(3): # do the flash 3 times
+    for _ in range(3): # do the flash 3 times
         for start, end, step in ((0, 255, 1), (255, 0, -1)):
             # The first iteration in this loop sets the following for loop
             # to go from 0 to 255, the second from 255 to 0.
             for alpha in range(start, end, animationSpeed * step): # animation loop
-                # alpha means transparency. 255 is opaque, 0 is invisible
                 checkForQuit()
                 flashSurf.fill((r, g, b, alpha))
                 DISPLAYSURF.blit(origSurf, (0, 0))
+                # Blit the transparent flash surface over the original
                 DISPLAYSURF.blit(flashSurf, (0, 0))
                 drawButtons()
+
+                # Also draw a "Game Over" message in the center
+                gameOverSurf = BASICBIGFONT.render('Game Over!', 1, BRIGHTRED)
+                gameOverRect = gameOverSurf.get_rect()
+                gameOverRect.center = (WINDOWWIDTH // 2, WINDOWHEIGHT // 2)
+                DISPLAYSURF.blit(gameOverSurf, gameOverRect)
+
                 pygame.display.update()
                 FPSCLOCK.tick(FPS)
-
 
 
 def getButtonClicked(x, y):

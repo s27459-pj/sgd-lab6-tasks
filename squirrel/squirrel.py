@@ -93,6 +93,8 @@ def runGame():
     gameOverMode = False      # if the player has lost
     gameOverStartTime = 0     # time the player lost
     winMode = False           # if the player has won
+    levelUpMode = False       # if the player has leveled up
+    levelUpStartTime = 0      # time the player leveled up
 
     # create the surfaces to hold game text
     gameOverSurf = BASICFONT.render('Game Over', True, WHITE)
@@ -106,6 +108,11 @@ def runGame():
     winSurf2 = BASICFONT.render('(Press "r" to restart.)', True, WHITE)
     winRect2 = winSurf2.get_rect()
     winRect2.center = (HALF_WINWIDTH, HALF_WINHEIGHT + 30)
+
+    # Level up message
+    levelUpSurf = BASICFONT.render('Level Up!', True, WHITE)
+    levelUpRect = levelUpSurf.get_rect()
+    levelUpRect.center = (HALF_WINWIDTH, 60)
 
     # camerax and cameray are the top left of where the camera view is
     camerax = 0
@@ -137,6 +144,10 @@ def runGame():
         # Check if we should turn off invulnerability
         if invulnerableMode and time.time() - invulnerableStartTime > INVULNTIME:
             invulnerableMode = False
+
+        # Check if we should turn off level up mode
+        if levelUpMode and time.time() - levelUpStartTime > 2:
+            levelUpMode = False
 
         # move all the squirrels
         for sObj in squirrelObjs:
@@ -217,6 +228,13 @@ def runGame():
         # draw the health meter
         drawHealthMeter(playerObj['health'])
 
+        # Show level up message if needed
+        if levelUpMode:
+            if time.time() - levelUpStartTime < 1.0:
+                DISPLAYSURF.blit(levelUpSurf, levelUpRect)
+            else:
+                levelUpMode = False
+
         for event in pygame.event.get(): # event handling loop
             if event.type == QUIT:
                 terminate()
@@ -284,6 +302,10 @@ def runGame():
                         # player is larger and eats the squirrel
                         playerObj['size'] += int( (sqObj['width'] * sqObj['height'])**0.2 ) + 1
                         del squirrelObjs[i]
+
+                        # Show level up message
+                        levelUpMode = True
+                        levelUpStartTime = time.time()
 
                         if playerObj['facing'] == LEFT:
                             playerObj['surface'] = pygame.transform.scale(L_SQUIR_IMG, (playerObj['size'], playerObj['size']))

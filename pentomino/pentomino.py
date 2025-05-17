@@ -716,6 +716,12 @@ def drawStatus(score, level):
     levelRect.topleft = (WINDOWWIDTH - 150, 50)
     DISPLAYSURF.blit(levelSurf, levelRect)
 
+    # draw the cleared lines count
+    clearedLinesSurf = BASICFONT.render('Cleared: %s' % score, True, TEXTCOLOR)
+    clearedLinesRect = clearedLinesSurf.get_rect()
+    clearedLinesRect.topleft = (WINDOWWIDTH - 150, 80)
+    DISPLAYSURF.blit(clearedLinesSurf, clearedLinesRect)
+
 
 def drawPiece(piece, pixelx=None, pixely=None):
     shapeToDraw = PIECES[piece['shape']][piece['rotation']]
@@ -734,10 +740,10 @@ def drawNextPiece(piece):
     # draw the "next" text
     nextSurf = BASICFONT.render('Next:', True, TEXTCOLOR)
     nextRect = nextSurf.get_rect()
-    nextRect.topleft = (WINDOWWIDTH - 120, 80)
+    nextRect.topleft = (WINDOWWIDTH - 120, 110)
     DISPLAYSURF.blit(nextSurf, nextRect)
     # draw the "next" piece
-    drawPiece(piece, pixelx=WINDOWWIDTH-120, pixely=100)
+    drawPiece(piece, pixelx=WINDOWWIDTH-120, pixely=130)
 
 
 if __name__ == '__main__':

@@ -43,6 +43,8 @@ DOWN = 'down'
 LEFT = 'left'
 RIGHT = 'right'
 
+NEWPUZZLESLIDES = 80
+
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, RESET_SURF, RESET_RECT, NEW_SURF, NEW_RECT, SOLVE_SURF, SOLVE_RECT
 
@@ -53,13 +55,14 @@ def main():
     BASICFONT = pygame.font.Font('freesansbold.ttf', BASICFONTSIZE)
 
     # Store the option buttons and their rectangles in OPTIONS.
-    RESET_SURF, RESET_RECT = makeText('Reset',    TEXTCOLOR, TILECOLOR, WINDOWWIDTH - 120, WINDOWHEIGHT - 90)
-    NEW_SURF,   NEW_RECT   = makeText('New Game', TEXTCOLOR, TILECOLOR, WINDOWWIDTH - 120, WINDOWHEIGHT - 60)
-    SOLVE_SURF, SOLVE_RECT = makeText('Solve',    TEXTCOLOR, TILECOLOR, WINDOWWIDTH - 120, WINDOWHEIGHT - 30)
+    RESET_SURF, RESET_RECT = makeText('Reset',    TEXTCOLOR, TILECOLOR, WINDOWHEIGHT - 90, WINDOWWIDTH - 120)
+    NEW_SURF,   NEW_RECT   = makeText('New Game', TEXTCOLOR, TILECOLOR, WINDOWHEIGHT - 60, WINDOWWIDTH - 120)
+    SOLVE_SURF, SOLVE_RECT = makeText('Solve',    TEXTCOLOR, TILECOLOR, WINDOWHEIGHT - 30, WINDOWWIDTH - 120)
 
-    mainBoard, solutionSeq = generateNewPuzzle(80)
+    mainBoard, solutionSeq = generateNewPuzzle(NEWPUZZLESLIDES)
     SOLVEDBOARD = getStartingBoard() # a solved board is the same as the board in a start state.
     allMoves = [] # list of moves made from the solved configuration
+    playerMoves = [] # moves made by the player
 
     while True: # main game loop
         slideTo = None # the direction, if any, a tile should slide
@@ -67,7 +70,7 @@ def main():
         if mainBoard == SOLVEDBOARD:
             msg = 'Solved!'
 
-        drawBoard(mainBoard, msg)
+        drawBoard(mainBoard, msg, len(playerMoves))
 
         checkForQuit()
         for event in pygame.event.get(): # event handling loop
@@ -79,12 +82,15 @@ def main():
                     if RESET_RECT.collidepoint(event.pos):
                         resetAnimation(mainBoard, allMoves) # clicked on Reset button
                         allMoves = []
+                        playerMoves = []
                     elif NEW_RECT.collidepoint(event.pos):
-                        mainBoard, solutionSeq = generateNewPuzzle(80) # clicked on New Game button
+                        mainBoard, solutionSeq = generateNewPuzzle(NEWPUZZLESLIDES) # clicked on New Game button
                         allMoves = []
+                        playerMoves = []
                     elif SOLVE_RECT.collidepoint(event.pos):
                         resetAnimation(mainBoard, solutionSeq + allMoves) # clicked on Solve button
                         allMoves = []
+                        playerMoves = []
                 else:
                     # check if the clicked tile was next to the blank spot
 
@@ -110,9 +116,18 @@ def main():
                     slideTo = DOWN
 
         if slideTo:
-            slideAnimation(mainBoard, slideTo, 'Click tile or press arrow keys to slide.', 8) # show slide on screen
+            # show slide on screen
+            slideAnimation(
+                mainBoard,
+                slideTo,
+                'Click tile or press arrow keys to slide.',
+                animationSpeed=8,
+                playerMoveCount=len(playerMoves),
+            )
             makeMove(mainBoard, slideTo)
-            allMoves.append(slideTo) # record the slide
+            # Record the slide
+            allMoves.append(slideTo)
+            playerMoves.append(slideTo)
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
@@ -225,18 +240,27 @@ def drawTile(tilex, tiley, number, adjx=0, adjy=0):
     DISPLAYSURF.blit(textSurf, textRect)
 
 
-def makeText(text, color, bgcolor, top, left):
+def makeText(text, color, bgcolor, top, left = None, right = None):
     # create the Surface and Rect objects for some text.
     textSurf = BASICFONT.render(text, True, color, bgcolor)
     textRect = textSurf.get_rect()
-    textRect.topleft = (top, left)
+    if left is not None:
+        textRect.topleft = (left, top)
+    elif right is not None:
+        textRect.topright = (right, top)
+    else:
+        raise ValueError('You must specify either left or right')
     return (textSurf, textRect)
 
 
-def drawBoard(board, message):
+def drawBoard(board, message, playerMoveCount = None):
     DISPLAYSURF.fill(BGCOLOR)
     if message:
         textSurf, textRect = makeText(message, MESSAGECOLOR, BGCOLOR, 5, 5)
+        DISPLAYSURF.blit(textSurf, textRect)
+
+    if playerMoveCount is not None:
+        textSurf, textRect = makeText(f'Moves: {playerMoveCount}', TEXTCOLOR, BGCOLOR, 5, right=WINDOWWIDTH - 5)
         DISPLAYSURF.blit(textSurf, textRect)
 
     for tilex in range(len(board)):
@@ -254,7 +278,7 @@ def drawBoard(board, message):
     DISPLAYSURF.blit(SOLVE_SURF, SOLVE_RECT)
 
 
-def slideAnimation(board, direction, message, animationSpeed):
+def slideAnimation(board, direction, message, animationSpeed, playerMoveCount = None):
     # Note: This function does not check if the move is valid.
 
     blankx, blanky = getBlankPosition(board)
@@ -272,7 +296,7 @@ def slideAnimation(board, direction, message, animationSpeed):
         movey = blanky
 
     # prepare the base surface
-    drawBoard(board, message)
+    drawBoard(board, message, playerMoveCount)
     baseSurf = DISPLAYSURF.copy()
     # draw a blank space over the moving tile on the baseSurf Surface.
     moveLeft, moveTop = getLeftTopOfTile(movex, movey)

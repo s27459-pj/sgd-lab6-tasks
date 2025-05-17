@@ -87,6 +87,7 @@ def main():
 
 
 def runGame():
+    fps = FPS
     # set up variables for the start of a new game
     invulnerableMode = False  # if the player is invulnerable
     invulnerableStartTime = 0 # time the player became invulnerable
@@ -127,7 +128,8 @@ def runGame():
                  'x': HALF_WINWIDTH,
                  'y': HALF_WINHEIGHT,
                  'bounce':0,
-                 'health': MAXHEALTH}
+                 'health': MAXHEALTH,
+                 'squirrels_eaten': 0}
 
     moveLeft  = False
     moveRight = False
@@ -303,9 +305,16 @@ def runGame():
                         playerObj['size'] += int( (sqObj['width'] * sqObj['height'])**0.2 ) + 1
                         del squirrelObjs[i]
 
+                        # Increment squirrels eaten counter
+                        playerObj['squirrels_eaten'] += 1
+
                         # Show level up message
                         levelUpMode = True
                         levelUpStartTime = time.time()
+
+                        # Increase game speed every 5 squirrels eaten
+                        if playerObj['squirrels_eaten'] % 5 == 0:
+                            fps += 2
 
                         if playerObj['facing'] == LEFT:
                             playerObj['surface'] = pygame.transform.scale(L_SQUIR_IMG, (playerObj['size'], playerObj['size']))
@@ -335,7 +344,7 @@ def runGame():
             DISPLAYSURF.blit(winSurf2, winRect2)
 
         pygame.display.update()
-        FPSCLOCK.tick(FPS)
+        FPSCLOCK.tick(fps)
 
 
 

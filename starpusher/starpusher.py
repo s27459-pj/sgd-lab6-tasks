@@ -140,6 +140,7 @@ def runLevel(levels, levelNum):
     MAX_CAM_Y_PAN = abs(HALF_WINWIDTH - int(mapWidth / 2)) + TILEHEIGHT
 
     levelIsComplete = False
+    levelCompleteStartTime = None  # Track when the level was completed
     # Track how much the camera has moved:
     cameraOffsetX = 0
     cameraOffsetY = 0
@@ -152,7 +153,6 @@ def runLevel(levels, levelNum):
     while True: # main game loop
         # Reset these variables:
         playerMoveTo = None
-        keyPressed = False
 
         for event in pygame.event.get(): # event handling loop
             if event.type == QUIT:
@@ -161,7 +161,6 @@ def runLevel(levels, levelNum):
 
             elif event.type == KEYDOWN:
                 # Handle key presses
-                keyPressed = True
                 if event.key == K_LEFT:
                     playerMoveTo = LEFT
                 elif event.key == K_RIGHT:
@@ -222,7 +221,7 @@ def runLevel(levels, levelNum):
             if isLevelFinished(levelObj, gameStateObj):
                 # level is solved, we should show the "Solved!" image.
                 levelIsComplete = True
-                keyPressed = False
+                levelCompleteStartTime = pygame.time.get_ticks()  # Record completion time
 
         DISPLAYSURF.fill(BGCOLOR)
 
@@ -253,13 +252,13 @@ def runLevel(levels, levelNum):
         DISPLAYSURF.blit(stepSurf, stepRect)
 
         if levelIsComplete:
-            # is solved, show the "Solved!" image until the player
-            # has pressed a key.
+            # is solved, show the "Solved!" image until 3 seconds have passed
             solvedRect = IMAGESDICT['solved'].get_rect()
             solvedRect.center = (HALF_WINWIDTH, HALF_WINHEIGHT)
             DISPLAYSURF.blit(IMAGESDICT['solved'], solvedRect)
 
-            if keyPressed:
+            # Check if 3 seconds have passed since level completion
+            if pygame.time.get_ticks() - levelCompleteStartTime >= 3000:  # 3000 ms = 3 seconds
                 return 'solved'
 
         pygame.display.update() # draw DISPLAYSURF to the screen.

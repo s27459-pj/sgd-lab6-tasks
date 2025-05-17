@@ -25,6 +25,7 @@ RED       = (255,   0,   0)
 GREEN     = (  0, 255,   0)
 DARKGREEN = (  0, 155,   0)
 DARKGRAY  = ( 40,  40,  40)
+LIGHTGRAY = (200, 200, 200)
 BGCOLOR = BLACK
 
 UP = 'up'
@@ -57,6 +58,7 @@ def runGame():
                   {'x': startx - 1, 'y': starty},
                   {'x': startx - 2, 'y': starty}]
     direction = RIGHT
+    paused = False
 
     # Start the apple in a random place.
     apple = getRandomLocation()
@@ -66,16 +68,27 @@ def runGame():
             if event.type == QUIT:
                 terminate()
             elif event.type == KEYDOWN:
-                if (event.key == K_LEFT or event.key == K_a) and direction != RIGHT:
-                    direction = LEFT
-                elif (event.key == K_RIGHT or event.key == K_d) and direction != LEFT:
-                    direction = RIGHT
-                elif (event.key == K_UP or event.key == K_w) and direction != DOWN:
-                    direction = UP
-                elif (event.key == K_DOWN or event.key == K_s) and direction != UP:
-                    direction = DOWN
+                if event.key == K_p:
+                    paused = not paused
+                    if paused:
+                        drawPauseScreen()
+                        pygame.display.update()
+                    continue
                 elif event.key == K_ESCAPE:
                     terminate()
+                elif not paused:
+                    if (event.key == K_LEFT or event.key == K_a) and direction != RIGHT:
+                        direction = LEFT
+                    elif (event.key == K_RIGHT or event.key == K_d) and direction != LEFT:
+                        direction = RIGHT
+                    elif (event.key == K_UP or event.key == K_w) and direction != DOWN:
+                        direction = UP
+                    elif (event.key == K_DOWN or event.key == K_s) and direction != UP:
+                        direction = DOWN
+
+        if paused:
+            FPSCLOCK.tick(FPS)
+            continue
 
         # check if the worm has hit itself or the edge
         if wormCoords[HEAD]['x'] == -1 or wormCoords[HEAD]['x'] == CELLWIDTH or wormCoords[HEAD]['y'] == -1 or wormCoords[HEAD]['y'] == CELLHEIGHT:
@@ -217,6 +230,22 @@ def drawGrid():
         pygame.draw.line(DISPLAYSURF, DARKGRAY, (x, 0), (x, WINDOWHEIGHT))
     for y in range(0, WINDOWHEIGHT, CELLSIZE): # draw horizontal lines
         pygame.draw.line(DISPLAYSURF, DARKGRAY, (0, y), (WINDOWWIDTH, y))
+
+
+def drawPauseScreen():
+    # Draw main pause text
+    pauseFont = pygame.font.Font('freesansbold.ttf', 60)
+    pauseSurf = pauseFont.render('Paused', True, WHITE)
+    pauseRect = pauseSurf.get_rect()
+    pauseRect.center = (WINDOWWIDTH / 2, WINDOWHEIGHT / 2)
+    DISPLAYSURF.blit(pauseSurf, pauseRect)
+
+    # Draw subtext
+    subtextFont = pygame.font.Font('freesansbold.ttf', 20)
+    subtextSurf = subtextFont.render('Press P to resume', True, LIGHTGRAY)
+    subtextRect = subtextSurf.get_rect()
+    subtextRect.midtop = (WINDOWWIDTH / 2, pauseRect.bottom + 10)
+    DISPLAYSURF.blit(subtextSurf, subtextRect)
 
 
 if __name__ == '__main__':
